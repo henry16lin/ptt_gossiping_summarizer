@@ -1,6 +1,7 @@
 # ptt_gossiping_summarizer
 parse ptt gossiping article and summary by wordcloud and topic model(LDA)
-  
+
+## Note:
 *`ptt_parser.py`*: parse gossiping article menu and insert to DB `ptt.db` in table `gossiping_article_view`   
 *`gossipiing_daily_summarizer.py`* : call `text_freq_analyst.py` to get wordcloud and apply LDA for textual analysis  
 the result will in  `/summary_result_fig`  
