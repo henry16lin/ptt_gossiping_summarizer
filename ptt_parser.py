@@ -12,7 +12,7 @@ def daily_base_article_parser(date_str):
     
     query_time_obj = datetime.datetime.strptime(date_str, '%Y/%m/%d')
     
-    # 繞過18歲認證
+    # 18歲認證
     payload = {
             'from':'/bbs/Gossiping/index.html',
             'yes':'yes'
@@ -33,9 +33,11 @@ def daily_base_article_parser(date_str):
     page_url = 'https://www.ptt.cc/bbs/Gossiping/'+link[:-2]
     page = int(page_url.split('index')[1][:-5])
     
-    #連線
-    conn = sqlite3.connect('ptt123.db') 
+    
+    conn = sqlite3.connect('ptt.db') #create/connect to db
     cursor = conn.cursor()
+    table_creator(cursor)    #create table if table doesn't exist
+    
     
     article_cnt = 0
     today_flag = True
@@ -54,10 +56,8 @@ def daily_base_article_parser(date_str):
                 artical_date = '0'+tmp_date[1:]
             else:
                 artical_date = tmp_date
-            #print(artical_date)
+                
             today_article_flag = (artical_date == date_str[-5:])
-            #print(artical_date)
-            #print(today_article_flag)
             
             if today_article_flag:
                 date= artical_date
@@ -93,7 +93,7 @@ def daily_base_article_parser(date_str):
         else:
             today_flag = False
 
-        print('\n ##########\n finish search page index: %d with latest date is: %s \n ########## \n' %(page,artical_date))
+        print('### finish search page index: %d with latest date is: %s ###' %(page,artical_date))
         page_url = 'https://www.ptt.cc/bbs/Gossiping/index'+str(page)+'.html'
     
     print('total insert article count: %d'%article_cnt)
@@ -103,14 +103,33 @@ def daily_base_article_parser(date_str):
     warnings.resetwarnings()
 
 
+
+def table_creator(cursor):
+    try:
+        insert_sql_str = """CREATE TABLE gossiping_article_view (
+        	PAGE	INTEGER NOT NULL,
+        	DATE	TEXT NOT NULL,
+        	AUTHOR	TEXT,
+        	PUSH	TEXT,
+        	TITLE	TEXT,
+        	ARTICLE_URL	TEXT,
+        	RPT_DATETIME	TEXT NOT NULL,
+        	PRIMARY KEY(DATE,AUTHOR,TITLE)
+        );"""
+        cursor.execute(insert_sql_str)
+    except:
+        print('table already exist, parse data and insert to exists table...')
+
+
+
+
 if __name__ == '__main__':
     today = datetime.datetime.today().strftime('%Y/%m/%d')
     yesterday_obj = datetime.datetime.strptime(today, '%Y/%m/%d')- datetime.timedelta(days=1)
     yesterday = datetime.datetime.strftime(yesterday_obj,'%Y/%m/%d')
-    print('parse yesterday %s article menu: %s' %yesterday)
+    print('parse yesterday %s article menu' %yesterday)
     
     daily_base_article_parser(yesterday)
 
 
 #daily_base_article_parser('2019/04/26')
-
