@@ -12,6 +12,12 @@ import text_freq_analyst
 #import logging
 #logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+#send email
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
 ### functions ###
 
@@ -59,6 +65,40 @@ def text_cluster(text_list,model):
     cluster = prob[max_prob_ind][0]
     
     return cluster
+
+
+def send_mail(subject,content,attach_path_list=[]):
+    email_user = 'sender email address'
+    email_password = 'sender password'
+    email_send = 'receiver email address'
+    
+    msg = MIMEMultipart()
+    msg['From'] = email_user
+    msg['To'] = email_send
+    msg['Subject'] = subject
+    
+    body = content
+    msg.attach(MIMEText(body,'plain'))
+    
+    for i in range(len(attach_path_list)):
+        part = MIMEBase('application','octet-stream')
+        filename = attach_path_list[i]
+        attachment = open(filename,'rb')
+        part = MIMEBase('application','octet-stream')
+        part.set_payload((attachment).read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition',"attachment; filename= "+filename)
+        msg.attach(part)
+
+    text = msg.as_string()
+    server = smtplib.SMTP('smtp.gmail.com',587)
+    server.starttls()
+    server.login(email_user,email_password)
+    
+    server.sendmail(email_user,email_send,text)
+    server.quit()
+    
+    return True
 
 
 #############################################################
@@ -203,5 +243,17 @@ else:
     
     plt.savefig('summary_result_fig/'+''.join(date.split('/'))+'biweeks_topic.jpg',bbox_inches='tight')
    
+'''
+print('sending email...')
+try:
+    subject = ''.join(date.split('/'))+' ptt_gossiping summary'
+    content = 'Hello!\n 最近的熱門話題第一名是"'+ top_fq[0][0]+'" 第二名是"'+ top_fq[1][0]+'" 第三名是"'+ top_fq[2][0]+'"\n 文字雲 & two-week trend 請參考附檔~'
+    word_cloud_path = r'summary_result_fig/'+''.join(date.split('/'))+'wordcloud.jpg'
+    trend_path = r'summary_result_fig/'+''.join(date.split('/'))+'biweeks_topic.jpg'
+    send_mail(subject,content,attach_path_list=[word_cloud_path,trend_path])
+    print('successfully send email!')
+except:
+    print('fail to send email. ignore it!')
 
+'''
 
